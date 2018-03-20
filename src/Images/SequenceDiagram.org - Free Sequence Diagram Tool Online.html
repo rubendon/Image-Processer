@@ -1,0 +1,986 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD xmlns:og='http://ogp.me/ns#'>
+    <META CHARSET="UTF-8">
+    <title>SequenceDiagram.org - Free Sequence Diagram Tool Online</title>
+    <meta name="description"
+          content="Free Sequence Diagram Tool Online. Clean simple interface and fast client side processing. Works Online and Offline, Scripting and Drag and Drop.">
+    <meta name="keywords"
+          content="sequence diagram tool,sequence diagram online,online sequence diagram,web sequence diagrams,sequence diagram,free,sequence diagram example,时序图,Diagrama de secuencia,Diagramme de séquence,Diagrama de sequência,シーケンス図,在线时序图">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <meta property="og:image" content="http://sequencediagram.org/sequencediagramorg.png"/>
+    <meta property="og:url" content="http://sequencediagram.org"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="SequenceDiagram.org - Free Sequence Diagram Tool Online"/>
+    <meta property="og:description" content="Clean simple interface and fast client side processing. Works Online and Offline, Scripting and Drag and Drop."/>
+
+    <script>
+        $ = function (id) {
+            return document.getElementById(id)
+        };
+    </script>
+
+    <script src="libs/lz-string.min.js"></script>
+    <script src="libs/canvas2svg.min.js"></script>
+    <script src="libs/codemirror.js"></script>
+    <link rel="stylesheet" href="libs/codemirror.css">
+    <link rel="stylesheet" href="libs/show-hint.css">
+    <script src="libs/show-hint.js"></script>
+    <script src="libs/active-line.js"></script>
+    <script src="libs/rbush.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="index.css?v=6.5.0"/>
+    <script src="all.min.js?v=6.5.0"></script>
+
+    <!--<script src="seqdiahint.js"></script>-->
+    <!--<script src="seqdiamode.js"></script>-->
+    <!--<script src="main.js"></script>-->
+    <!--<script src="metrics.js"></script>-->
+    <!--<script src="parser.js"></script>-->
+    <!--<script src="entity/participant.js"></script>-->
+    <!--<script src="entity/divider.js"></script>-->
+    <!--<script src="entity/title.js"></script>-->
+    <!--<script src="entity/fontFamily.js"></script>-->
+    <!--<script src="entity/message.js"></script>-->
+    <!--<script src="entity/noteBoxLeftRight.js"></script>-->
+    <!--<script src="entity/noteBoxOver.js"></script>-->
+    <!--<script src="entity/autonumber.js"></script>-->
+    <!--<script src="entity/linear.js"></script>-->
+    <!--<script src="entity/fragment.js"></script>-->
+    <!--<script src="entity/entryspacing.js"></script>-->
+    <!--<script src="entity/participantspacing.js"></script>-->
+    <!--<script src="entity/fontsize.js"></script>-->
+    <!--<script src="entity/parallel.js"></script>-->
+    <!--<script src="entity/activation.js"></script>-->
+    <!--<script src="entity/space.js"></script>-->
+    <!--<script src="entity/createDestroy.js"></script>-->
+    <!--<script src="entity/activeColor.js"></script>-->
+    <!--<script src="entity/lifeLineColor.js"></script>-->
+    <!--<script src="entity/lifeLineWeight.js"></script>-->
+    <!--<script src="painter.js"></script>-->
+    <!--<script src="interactor.js"></script>-->
+    <!--<script src="contextMenu.js"></script>-->
+    <!--<script src="messageCreator.js"></script>-->
+    <!--<script src="entryMover.js"></script>-->
+    <!--<script src="textUtil.js"></script>-->
+    <!--<script src="participantTypes.js"></script>-->
+    <!--<script src="saveAndOpen.js"></script>-->
+
+</head>
+<body onload="SEQ.main.loadInitialData(); SEQ.main.parse();">
+<div id="top">
+
+    <img id="logo" src="assets/logo.svg">
+    <!--lic-->
+    <div id="topRight">
+
+        <label>Show Participant Overlay<input onclick="SEQ.main.toggleParticipantOverlay();" type="checkbox" id="partcipantOverlayCheckbox"></label>
+        &nbsp;
+        <button onclick="SEQ.main.minimizeTop();" title="hide the top bar" id="close">Hide Top Bar</button>
+        &nbsp;
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="display: inline-block">
+            <input type="hidden" name="cmd" value="_s-xclick">
+            <input type="hidden" name="hosted_button_id" value="VWPSBDS67UJCL">
+            <input type="image" src="paypal/btn_donateCC_LG.png" name="submit" alt="PayPal - The safer, easier way to pay online!">
+        </form>
+    </div>
+</div>
+<div id="actions">
+    <img class="actionButton" src="assets/instructions.svg" title="instructions"
+         onclick="$('instructionsPopup').style.display='block';$('cover').style.display='block';">
+    <img id="addParticipant" class="actionButton" src="assets/participant01.svg" title="add participant"
+         onclick="SEQ.interactor.prependParticipant();">
+    <img id="zoomIn" class="actionButton" src="assets/zoomin.svg" title="zoom in"
+         onclick="SEQ.main.changeFontSize(SEQ.main.FontChange.INCREASE);">
+    <img id="zoomOut" class="actionButton" src="assets/zoomout.svg" title="zoom out"
+         onclick="SEQ.main.changeFontSize(SEQ.main.FontChange.DECREASE);">
+    <img id="export" class="actionButton" src="assets/export01.svg"
+         title="export diagram for right-click-copy using current zoom level (note: use the magnifying glass for larger image)"
+         onclick="SEQ.main.exportDiagram();">
+    <img id="createUrl" class="actionButton" src="assets/url.svg" title="create URL to share"
+         onclick="SEQ.main.createShareUrl();">
+    <img id="openButton" class="actionButton" src="assets/open.svg" title="open source text"
+         onclick="SEQ.saveAndOpen.openSource(this); SEQ.interactor.cancelAllInteraction();">
+    <img id="saveButton" class="actionButton" src="assets/save.svg" title="save source text"
+         onclick="SEQ.saveAndOpen.saveSource(this); SEQ.interactor.cancelAllInteraction();">
+    <a href="#" id="pnghq" onclick="SEQ.saveAndOpen.savePngHq();">
+        <img class="actionButton" src="assets/pnghq.svg" title="save PNG HQ image using current zoom level (note: use the magnifying glass for larger image)">
+    </a>
+    <a href="#" id="jpglq" onclick="SEQ.saveAndOpen.saveJpgLq();">
+        <img class="actionButton" src="assets/jpglq.svg" title="save JPEG LQ image using current zoom level (note: use the magnifying glass for larger image)">
+    </a>
+    <a href="#" id="svg" onclick="SEQ.saveAndOpen.saveSvg();">
+        <img class="actionButton" src="assets/svg.svg" title="save SVG image (vector format)">
+    </a>
+    <img class="actionButton" src="assets/info.svg" title="info" onclick="$('infoPopup').style.display='block';$('cover').style.display='block';">
+</div>
+
+<textarea id="syntaxErrors" cols="1" rows="1" placeholder="syntax errors displayed here can be clicked" wrap="off"></textarea>
+
+<div id="source"></div>
+<div id="handleWrapper">
+    <div id="handle">≡</div>
+</div>
+
+
+<canvas id="diagramCanvas" class="canvas" width="300" height="100">
+    Device not supported, use firefox or chrome or safari or ie 10+
+</canvas>
+<canvas id="participantCanvas" class="canvas" width="500" height="100"></canvas>
+<div id="interactionCanvasWrapper">
+    <canvas id="interactionCanvas" class="canvas" width="300" height="100">
+        Device not supported, use firefox or chrome or safari or ie 10+
+    </canvas>
+</div>
+
+<div id="copyrightNotice">
+    Current Version: <a href="releasenotes.txt" title="release notes">6.5.0</a>
+    Legacy: <a href="legacy502/index.html">5.0.2</a>, <a href="legacy471/index.html">4.7.1</a><br>
+    © SequenceDiagram.org
+</div>
+
+<div id="cover" onclick="SEQ.main.closeDiagramImagePopup()"></div>
+
+<div class="popupDialog" id="instructionsPopup">
+    <img src="assets/closeicon.png" onclick="SEQ.main.closeDiagramImagePopup()" class="popupCloseIcon"/>
+
+    <div class="popupDialogInner">
+        <p class="infoHeadline">INSTRUCTIONS</p>
+        <div class="instruction">
+            <b class=".centerText">Buttons</b>
+            <p><img class="negtopmargin" src="assets/participant01.svg" height="50px" style="margin-bottom: -13px">Adds a new participant into the diagram of type participant.</p>
+            <p><img class="negtopmargin" src="assets/export01.svg" height="50px" style="margin-bottom: -13px">Shows the diagram as an image which can be right clicked and copied. The size of the image depends on the current zoom level.</p>
+            <p><img class="negtopmargin" src="assets/url.svg" height="50px" style="margin-bottom: -13px">Creates a link for sharing containing all the data of the diagram.</p>
+            <p><img class="negtopmargin" src="assets/open.svg" height="50px" style="margin-bottom: -13px">Open a source script text file directly from your hard drive or from the browsers local storage.</p>
+            <p><img class="negtopmargin" src="assets/save.svg" height="50px" style="margin-bottom: -13px">Save the source script as a text file directly to your hard drive or in the browsers local storage.</p>
+            <p><img class="negtopmargin" src="assets/pnghq.svg" height="50px" style="margin-bottom: -13px">Save the diagram as a HQ png image. The size of the image depends on the current zoom level.</p>
+            <p><img class="negtopmargin" src="assets/jpglq.svg" height="50px" style="margin-bottom: -13px">Save the diagram as a LQ jpg image. The size of the image depends on the current zoom level.</p>
+            <p><img class="negtopmargin" src="assets/svg.svg" height="50px" style="margin-bottom: -13px">Save the diagram as a vector based svg image.</p>
+        </div>
+
+
+        <div class="instruction">
+            <b class=".centerText">Autocomplete</b>
+            <ul>
+                <li>Press Ctrl+Space to trigger autocomplete</li>
+            </ul>
+        </div>
+
+        <div class="instruction">
+            <b class=".centerText">Large Example</b>
+            <ul>
+                <li>Large example including most of the features</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/largeexample.png" alt="sequence diagram example"
+                 onclick="SEQ.main.appendToSource(LZString.decompressFromEncodedURIComponent('C4S2BsFMAIBUAsQGdrOgQ2qCkBQuAHdAJ1AGMQiA7YJIiqgc2kgEcBXdcXAYiNJAVqteiCbRGIAG6QUAW3RVO4aGQD2NYmpVqAZtDroGzAEaRgAd0iQq0fuUqLaAGhYcuALjfLoAE2TAimQwZpbWtlwq9oKONEiuSnJmxKgAdJCp0ABMAAypAKxecmIgcuxyBvR4uEbAaikARACC4IIwAFTtFmDwGAA6VOAazFTocpANGCgtbbxI7AQE9cCQvnYkDsJYAJ4Esl7RQk6utfWuJmrsVL4k267qmtquNth3fuiBJuhI1YexwNAAMqQYgyYgARlwN0+3xgAFUfsQACIfTA8VqMeDAEzgdh4P5bJGXHEwMitMgAaywamgxBsY3xGxiWwA4nSbNAAApMo40aDokCY4CMdlUfB8Hn-aANLHAAgeAD0Cp+HBswX86BFY1S9UYCvUxCQpUYqQI8AIAH5SprIABeM0aDIEJiTb52eCOuYLJakVZeA0oa2MWTQbrAXqyggKyNIBW6EBQaBwgBKABl8FQ1CtoGowdAZsFnET2CTVOSqXVafTxh4ALKyJA2lCKNaZlYoMiKaBmVR0j6rDDXFj+FZrC7h7vbaDsI3iJBkYiUAGV8MwKC6YADFuoGgg2piZj+OlkCBTsO9Vd+ECa4hjAYDADC8EUwfWAl5tBz+gabZguZBkwvIuIYmFOZKCBSB6Dmsvi3owkjiGAKBGr4sj4AWkAALQAHzFqW4GUtSVajOM0BeA+5bQX4cFEQukD9hg0DjEgjbBq4cj-qgAKgWWEFQdusGaghzBIUxIC+L4ib1AYgSkFRNi+EsYibtcxKJoYwRMegFIhisAAeAJIAo4BQMQ+DEBcek5nmGEeMmlzXAOlmoB2fajpOtKWTUzn-ikwKgiC4IeE0TDsOAJDdmoVloHR-ZjlO6CWQMYCqF2PYEOF6rQOuAJ6K4i5Cl+zgDL5JxDr5BiQGCXBvpsThILgPk2eSkAeLAkAGaltg9kgwDbFAawzlBl5mEMFgGNsNDoHpHgDJ0SBqKRFzgGs+nAJ0AxKgtpFgFwghYB1wBKgMmGYdtMBGZEB0GadAwANR3ed3aCtdwAPfeVAPotJhiB8IAaEgs1UA9nQAEIvduy2+AMrRUCGeivZ071UEqp27eSVGXSZp3HVQAwIjAfREbInZ7KGTgDu0CqYXdqjPoaAwAKJ6WMGX7KofQPdAkazUqFj8+kLNyGzOrEIwuC-tlkAbl+0BsuEXKSlsPBatsHhfUMKRoPMizLAOGgYCZAy-vEtXMvVZVrMxrFobgeGJgRFY0nSJGQAAPDwOJ4ph8scty77-B41s2qGPSqNoZyVSEWZ1BUegDEQr66NJV3qJrOYRCZTENiHfV7A1EtZjABVYrLtnJoKpeOxnZsflgpSQLDuk0rF2YmwMtacSbHmO-xQ6CfBw3wJAcj4PwWDDz82csU2GB0m+kSN7gGFu5h-lgkFYjJ7g6+BThBPIqiHhb2ouAKRmRfWSCcuiorAfKwAYg-OQ5E-6sR1ryF7BQ8YDkN4hp3qMbBk0o+DsGIGzSY0lh5WQaDwJ+L8n4NHwE3Egy8Wo4V3hCDw6AJL8WymIeiKRer9nGDQHeIIN770RCiQIQdtIhnmCYFUeI+TB2DCgBGl5GykTzngA+tD0A4XtqSSilYXYMg8Kgsy0ivy6HwEBbYGkoJZEICQRe3AMKYMoYFNqw8F4mUbjJUhLwDClAylOAg7BaBbizkBEAIYPgTwuiAyxagjSgA0BQgKEIPYinCJhARR8AByWYiI9geLoGcA5zxvmMSsMhAILDD3nquAYVUXiBlsJeXQcFEkdjSjAZSIIoDoBkL4XAQTAinWwrhNSoiIJEQkTWAAkgCNAXAFpXl0LoEEpjcmLQIXDCKs5NIpV8GoWQVAADkKkJmDinMUkygpTEKGAGQRA4hk4pH8D0vpfI+FIBKvoexaF+AaLkWfTQSjRDiEhDUcAAIS4AmrpWVuMAuDAFcGIMk7BUJMXqDAU5WSVz6M+T3NyQ8R45h2XBYSzjDYAgWHbepvFCLiOrFhWpvtbD+zqjQDwAAJbQ-gAHAGICod5zYIhIEmmQaeNtKk0NRKvTCIi0VO2IpI4lK0oJIEQDLMw2yLqyVAOIN5blIBbgiMQLQ40FA6RQJeJu7x+WrDPuAKezyOU7hQh8x5tFJUsE1ZAdinEUo8V7uIAScKDyF2zBVdlrznaYucDiu++LgAeEBN6PWaxcmanyUDT5zhG4-GcGoAgXyhiRucPwZwJg+wUmcAuMAgguADDpLoZwKoc3ksEF8uGjBnCCkzHSFNANxIgi3CxEEXy6SSA0KG64VyKn2rXNLXK+gsFBSdZRA2mB2F-hSJLSsqwwCZA+pyOkLEDACrei8a+AxKwDAVYTQYhDuxJqQJOvGVBGa7hSMkjk8YqDIGHr4VI+AqnoFXn2xpGLXY4LwdaoZRC5HxJHi8bxG9V43o8MAcBVBAxdvke2q+KQb3OB7erft2T9Eai1HHKghZnF7uidAWm25MK0WfEwC6tzGADFCFYDkwKPoAE1LhdUNl0vh5NdxrGUYheDF1LjEFQx1VmUAgaKOY8wLIBQFHXP49AAALDUaxGhyjJHQW0VeMHcGkuYF2dAUnEjJAGCQhJpjJAyBQBpkEdq+OEegHkSEN7V51JLA7MRLqn0-SPJAE8-1RgqBIHKq55KblGCguCVIOR8C2ltBXQqzrez0WzJgfwUgq3EGC+hDBOFrP4Ts1ymsPLlOqHJeAR686Iv9mpTmPYMq5WhwnDcNVawm74HA9qhGMHAQHls40gdDKbQlRHZfSsPwoAni4q4AgM6jmOSgNmDFHEZBcXAxVGDbSXK0ZpEsFiIBSw9ea1KlDlFMAEicMTEcnW-CN3MEU4A17mWBDvai8LzTWr1hnhwmjETJUVLU3UQzKR8iBZvcI67aXbvH26lmXoTmXMAxQWoSN0BwQvxyPXZicngg4VsggNAHTKrgH0Fm-ZwRcCRrO5LWbOiIRFj+w++zkjOSlKnj8IcigpwmHYIwalTGmccM8cBoiJ8AACLC1TjpvNqXUrbGpRQg-mFqwUzHC0TF5c+KKbMNPRRT8YmEeCw9fg-bC7q8XmwJSfBXqXyfpfdvAh+4JwRPx9rfXXH5Afbze9JpI19IT3uVyb06KtRTa5t0rJw9vT5u85bdj22xG5jVOjrv3+uqDbyD00zFau6S+Gxb7++-uDeO4+5c+Pj6GRuw9omtQFgqDW4VrbwOBvc8q6wmrqxECoCp-L9Hr1mf1MyZBIblr7uQ8e3qC+WvUf08x7j2TnvmLV48CaNPpoYmxM++b8P1vsfA9j+DxPz3CgtAaAX37FvAfJPvY7ykQL1eTcF7V2QbYigm976Xwfs-vfPf+O2Lf3F++De4AsmLonPjwTOBvX5F6msHAC9lajgEQEDCK2-ysgqh+GqiiBbwaiAA'))"
+                 title="Source too large to display as title"/>
+        </div>
+
+        <div class="instruction">
+            <b class=".centerText">Title</b>
+            <ul>
+                <li>The title is displayed at the top of the diagram</li>
+                <li>The title is also used as the file name when the<img class="negtopmargin" src="assets/save.svg" height="50px" style="margin-bottom: -13px">icons
+                    are clicked
+                </li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/title.png" alt="sequence diagram title example"
+                 onclick="SEQ.main.prependToSource('title Title\nA->B:info\n')"
+                 title="title Title
+A->B:info"/>
+        </div>
+
+        <div class="instruction">
+            <b class=".centerText">Participants</b>
+            <ul>
+                <li>New particpants of type participant may be added by clicking the <img class="negtopmargin" src="assets/participant01.svg" height="50px"
+                                                                      style="margin-bottom: -8px"> icon
+                </li>
+                <li>The following special participant types exist
+                    <ul>
+                        <li>actor - specific icon</li>
+                        <li>boundary - specific icon</li>
+                        <li>control - specific icon</li>
+                        <li>database - specific icon</li>
+                        <li>entity - specific icon</li>
+                        <li>fontawesome - different icons from Font Awesome specified via the unicode code points found here: <a href="http://fontawesome.io/icons/" target="_blank">fontawesome.io/icons</a><br>Note: The font is not embedded in exported SVG documents, hence, the font must be installed on the device viewing the SVG document</li>
+                        <li>materialdesignicons - different icons from Material Design Icons specified via the unicode code points found here: <a href="https://materialdesignicons.com/cheatsheet" target="_blank">materialdesignicons.com/cheatsheet</a><br>Note: The font is not embedded in exported SVG documents, hence, the font must be installed on the device viewing the SVG document</li>
+                    </ul>
+                </li>
+                <li>You may also use <a href="https://glyphsearch.com/?copy=unicode-hexadecimal" target="_blank">glyphsearch.com</a> to get the unicode code points for fontawesome and materialdesignicons</li>
+                <li>Change the alias of a participant by double clicking it</li>
+                <li>A long displayed name can be written on form:
+                    <ul>
+                        <li>participant "some very\nlong name" as Alice</li>
+                    </ul>
+                </li>
+                <li>Delete a participant by clicking it and using the delete key</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/participant.png"
+                 alt="sequence diagram participant example"
+                 onclick="SEQ.main.prependToSource('participant Participant\n')"
+                 title="participant Participant"/>
+            <img class="instructionsImage" src="instructionimages/actor.png"
+                 alt="sequence diagram actor example"
+                 onclick="SEQ.main.prependToSource('actor Actor\n')"
+                 title="actor Actor"/>
+            <img class="instructionsImage" src="instructionimages/boundary.png"
+                 alt="sequence diagram boundary example"
+                 onclick="SEQ.main.prependToSource('boundary Boundary\n')"
+                 title="boundary Boundary"/>
+            <img class="instructionsImage" src="instructionimages/control.png"
+                 alt="sequence diagram control example"
+                 onclick="SEQ.main.prependToSource('control Control\n')"
+                 title="control Control"/>
+            <img class="instructionsImage" src="instructionimages/database.png"
+                 alt="sequence diagram database example"
+                 onclick="SEQ.main.prependToSource('database Database\n')"
+                 title="database Database"/>
+            <img class="instructionsImage" src="instructionimages/entity.png"
+                 alt="sequence diagram entity example"
+                 onclick="SEQ.main.prependToSource('entity Entity\n')"
+                 title="entity Entity"/>
+            <img class="instructionsImage" src="instructionimages/actorMultiline.png"
+                 alt="sequence diagram actor with multi line example"
+                 onclick="SEQ.main.prependToSource('actor &quot;**++Big and\\nbold name&quot; as actorMultiline #red\n')"
+                 title="actor &quot;**++Big and\\nbold name&quot; as actorMultiline #red"/>
+            <img class="instructionsImage" src="instructionimages/participantMultiline.png"
+                 alt="sequence diagram participant with multi line example"
+                 onclick="SEQ.main.prependToSource('participant &quot;some long\\nname with **//styling//**&quot; as participantMultiline\n')"
+                 title="participant &quot;some long\\nname with **//styling//**&quot; as participantMultiline"/>
+            <img class="instructionsImage" src="instructionimages/fontawesome.png"
+                 alt="sequence diagram fontawesome icon example"
+                 onclick="SEQ.main.prependToSource('fontawesome f099 Twitter #1da1f2\n')"
+                 title="fontawesome f099 Twitter #1da1f2"/>
+            <img class="instructionsImage" src="instructionimages/materialdesignicons.png"
+                 alt="sequence diagram materialdesignicons icon example"
+                 onclick="SEQ.main.prependToSource('materialdesignicons F1FF escalator\n')"
+                 title="materialdesignicons F1FF escalator"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Messages</b>
+            <ul>
+                <li>Messages are created by clicking and dragging in the diagram
+                    <ul>
+                        <li>Hold Shift before clicking for dashed line</li>
+                        <li>Hold Ctrl before clicking for open arrow</li>
+                        <li>Hold Shift+Ctrl before clicking for open arrow with dashed line</li>
+                    </ul>
+                </li>
+                <li>Edit the text of a message by double clicking it</li>
+                <li>Change the start and end participants of the message by clicking and dragging the start or end of the message</li>
+                <li>Change position of the message by clicking and dragging the middle of the message</li>
+                <li>Delete the message by clicking it and pressing the delete key</li>
+                <li>New line is create using \n</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/syncreqresp.png"
+                 alt="sequence diagram request response example"
+                 onclick="SEQ.main.appendToSource('\nA->B:request\nA<--B:response')"
+                 title="A->B:request
+A<--B:response"/>
+            <img class="instructionsImage" src="instructionimages/asyncreqresp.png"
+                 alt="sequence diagram async request response example"
+                 onclick="SEQ.main.appendToSource('\nA->>B:request\nA<<--B:response')"
+                 title="A->>B:request
+A<<--B:response"/>
+            <img class="instructionsImage" src="instructionimages/selfmessage.png"
+                 alt="sequence diagram self referencing message example"
+                 onclick="SEQ.main.appendToSource('\nA->A:self message')"
+                 title="A->A:self message"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Notes and Boxes</b>
+            <ul>
+                <li>Notes and boxes are created by right clicking in the diagram and selecting the wanted note / box entry from the menu</li>
+                <li>Edit the text of a note or box by double clicking it</li>
+                <li>Change the start and end participants of the "note or box over several participants" by clicking and dragging the start or end of the note
+                    or box
+                </li>
+                <li>Change position of the note or box by clicking and dragging the middle of the note or box
+                    <ul>
+                        <li>
+                            Note: It is the bottom of the shapes that counts as the y position when dragging
+                        </li>
+                    </ul>
+                </li>
+                <li>Delete the note or box by clicking it and pressing the delete key</li>
+                <li>New line is create using \n</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/noteover.png"
+                 alt="sequence diagram notes over example"
+                 onclick="SEQ.main.appendToSource('\nnote over A:note over one\\nmultiple lines\\nof text\nnote over A,B:note over several')"
+                 title="note over A:note over one\nmultiple lines\nof text
+note over A,B:note over several"/>
+            <img class="instructionsImage" src="instructionimages/notesides.png"
+                 alt="sequence diagram notes on sides example"
+                 onclick="SEQ.main.appendToSource('\nnote left of A:note left of\nnote right of A:note right of')"
+                 title="note left of A:note left of
+note right of A:note right of"/>
+            <img class="instructionsImage" src="instructionimages/boxover.png"
+                 alt="sequence diagram box over example"
+                 onclick="SEQ.main.appendToSource('\nbox over A:box over one\nbox over A,B:box over several')"
+                 title="box over A:box over one
+box over A,B:box over several"/>
+            <img class="instructionsImage" src="instructionimages/boxsides.png"
+                 alt="sequence diagram boxes on sides example"
+                 onclick="SEQ.main.appendToSource('\nbox left of A:box left of\nbox right of A:box right of')"
+                 title="box left of A:box left of
+box right of A:box right of"/>
+            <img class="instructionsImage" src="instructionimages/aboxover.png"
+                 alt="sequence diagram angular box over example"
+                 onclick="SEQ.main.appendToSource('\nabox over A:abox over one\nabox over A,B:abox over several')"
+                 title="abox over A:abox over one
+abox over A,B:abox over several"/>
+            <img class="instructionsImage" src="instructionimages/aboxsides.png"
+                 alt="sequence diagram angular box on sides example"
+                 onclick="SEQ.main.appendToSource('\nabox left of A:abox left of\nabox right of A:abox right of')"
+                 title="abox left of A:abox left of
+abox right of A:abox right of"/>
+            <img class="instructionsImage" src="instructionimages/rboxover.png"
+                 alt="sequence diagram round box over example"
+                 onclick="SEQ.main.appendToSource('\nrbox over A:rbox over one\nrbox over A,B:rbox over several')"
+                 title="rbox over A:rbox over one
+rbox over A,B:rbox over several"/>
+            <img class="instructionsImage" src="instructionimages/rboxsides.png"
+                 alt="sequence diagram round box on sides example"
+                 onclick="SEQ.main.appendToSource('\nrbox left of A:rbox left of\nrbox right of A:rbox right of')"
+                 title="rbox left of A:rbox left of
+rbox right of A:rbox right of"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">References</b>
+            <ul>
+                <li>References are created by right clicking in the diagram selecting over which participants the reference should be from the menu</li>
+                <li>Edit the text of a reference by double clicking it</li>
+                <li>Change the start and end participants of the reference by clicking and dragging the start or end of the reference
+                </li>
+                <li>Change position of the reference by clicking and dragging the middle of the note or box
+                    <ul>
+                        <li>
+                            Note: It is the bottom of the shapes that counts as the y position when dragging
+                        </li>
+                    </ul>
+                </li>
+                <li>Delete the reference by clicking it and pressing the delete key</li>
+                <li>New line is create using \n</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/references.png"
+                 alt="sequence diagram notes over example"
+                 onclick="SEQ.main.appendToSource('\nA->B:info\nref over B,C:other interaction\nC->D:info')"
+                 title="A->B:info
+ref over B,C:other interaction
+C->D:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Dividers</b>
+            <ul>
+                <li>Dividers are created by right clicking in the diagram and selecting the divider entry from the menu</li>
+                <li>Edit the text of a divider by double clicking it</li>
+                <li>Change position of the divider by clicking and dragging it</li>
+                <li>Delete the divider by clicking it and pressing the delete key</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/divider.png"
+                 alt="sequence diagram divider example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nparticipant B\nparticipant C\nparticipant D\n==info==')"
+                 title="participant A
+participant B
+participant C
+participant D
+==info=="/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Create and Destroy</b>
+            <ul>
+                <li>Create and destroy are at this point not part of the context menu, participants may be defined in the start of the diagram</li>
+                <ul>
+                    <li>participantNameA->*participantNameB: message: Sends a message to participantNameB and creates participantNameB</li>
+                    <li>create participantName: Creates the participant without sending a message to it</li>
+                    <li>destroy participantName: Destroys the participant at the previous entry's y position</li>
+                    <li>destroyafter participantName: Destroys the participant at after a space and gives the destroy symbol its own space</li>
+                    <li>destroysilent participantName: Destroys the participant at the previous entry's y position without rendering the destroy symbol</li>
+                </ul>
+                <li>Click and drag on the entries to move them in y axis using the mouse</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/createMessageDestroy.png"
+                 alt="sequence diagram create message example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nactor X\nparticipant B\n\nA->B:info\nB-->*C:<<create>>\nnote over C:do something\nB<-C:info\ndestroy C\nB->*X:message to X\nnote over X:do something\ndestroyafter X\nA->B:info')"
+                 title="participant A
+actor X
+participant B
+
+A->B:info
+B-->*C:<<create>>
+note over C:do something
+B<-C:info
+destroy C
+B->*X:message to X
+note over X:do something
+destroyafter X
+A->B:info"/>
+            <img class="instructionsImage" src="instructionimages/createAndDestroy.png"
+                 alt="sequence diagram create without message example"
+                 onclick="SEQ.main.appendToSource('\nA->B:info\ncreate C\nnote over C: C created without message\nA<-C:info')"
+                 title="A->B:info
+create C
+note over C: C created without message
+A<-C:info"/>
+            <img class="instructionsImage" src="instructionimages/destroySilent.png"
+                 alt="sequence diagram destroy silent example"
+                 onclick="SEQ.main.appendToSource('\nA->>B:request\nA<<--B:response\ndestroysilent B\ndestroysilent A\nC->D: info\n')"
+                 title="A->>B:request
+A<<--B:response
+destroysilent B
+destroysilent A
+C->D: info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Activations</b>
+            <ul>
+                <li>Activations are created by right clicking in the diagram and selecting the activation entry from the menu</li>
+                <ul>
+                    <li>activate participantName: Activates the participant at the previous entry's y position</li>
+                    <li>deactivate participantName: Deactivates the participant at the previous entry's y position. If no entry has been added since the
+                        activation the activity is deactivated directly, use deactivateafter or space if you want an empty gap
+                    </li>
+                    <li>deactivateafter participantName: Deactivates the participant right below the previous entry's y position</li>
+                </ul>
+                <li>Activations cannot be selected, moved, or edited using the mouse</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/activationcallback.png"
+                 alt="sequence diagram activation example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nparticipant B\nparticipant C\nparticipant D\nA->B:info\nactivate B\nB->C:info\nactivate C\nC->>D:info\nactivate D\nB<--C:info\ndeactivate C\nA<--B:info\ndeactivate B\nB<-D:callback\ndeactivate D\nactivate B\nA<<--B:info\ndeactivate B')"
+                 title="participant A
+participant B
+participant C
+participant D
+A->B:info
+activate B
+B->C:info
+activate C
+C->>D:info
+activate D
+B<--C:info
+deactivate C
+A<--B:info
+deactivate B
+B<-D:callback
+deactivate D
+activate B
+A<<--B:info
+deactivate B"/>
+            <img class="instructionsImage" src="instructionimages/activationselfref.png"
+                 alt="sequence diagram activation with self reference example"
+                 onclick="SEQ.main.appendToSource('\nparticipant B\nparticipant D\nactivate D\nB->D:info\nactivate B\ndeactivateafter B\nD->D:info\nactivate D\nspace\ndeactivate D')"
+                 title="participant B
+participant D
+activate D
+B->D:info
+activate B
+deactivateafter B
+D->D:info
+activate D
+space
+deactivate D"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Spaces</b>
+            <ul>
+                <li>Spaces are created by right clicking in the diagram and selecting the space entry from the menu</li>
+                <li>Change position of the space by clicking and dragging it</li>
+                <li>Delete the space by clicking it and pressing the delete key</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/space.png"
+                 alt="sequence diagram space example"
+                 onclick="SEQ.main.appendToSource('\nparticipant B\nparticipant D\nactivate D\nB->D:info\nactivate B\nspace 3\ndeactivate B\nD->D:info\nactivate D\nspace\ndeactivate D')"
+                 title="participant B
+participant D
+activate D
+B->D:info
+activate B
+space 3
+deactivate B
+D->D:info
+activate D
+space
+deactivate D"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Fragments</b>
+            <ul>
+                <li>Fragments are created by right clicking in the diagram and selecting the wanted fragment type from the menu
+                    <ul>
+                        <li>Since many possible fragments exists, only the most common are included in the menu, complete list: alt, opt, loop, par, break,
+                            critical, ref, seq, strict, neg, ignore, consider, assert, region
+                        </li>
+                    </ul>
+                </li>
+                <li>Special fragments
+                <ul>
+                    <li>group allows a custom label for the fragment</li>
+                    <li>expandable allows a portion of the diagram to be expanded (expandable-) and collapsed (expandable+), click
+                    the label to toggle the expandable</li>
+                </ul>
+                </li>
+                <li>Edit the text of a fragment by double clicking the top of the fragment or its else part</li>
+                <li>Change inclusion of entries by clicking and dragging top, bottom, or else part of the fragment</li>
+                <li>You can also create new items directly inside the fragment</li>
+                <li>Delete the whole fragment (but keep the contents) by clicking the top or bottom of the fragment and pressing the delete key</li>
+                <li>Delete only the else (else is only supported inside the alt fragment) part by clicking the else divider and pressing delete key</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/opt.png"
+                 alt="sequence diagram opt fragment example"
+                 onclick="SEQ.main.appendToSource('\nopt optional\nnote over A:info\nA->B:info\nend')"
+                 title="opt optional
+note over A:info
+A->B:info
+end"/>
+            <img class="instructionsImage" src="instructionimages/alt.png"
+                 alt="sequence diagram alt fragment example"
+                 onclick="SEQ.main.appendToSource('\nalt case 1\nA->B:info\nelse case 2\nA->B:info\nelse case 3\nA->B:info\nend')"
+                 title="alt case 1
+A->B:info
+else case 2
+A->B:info
+else case 3
+A->B:info
+end"/>
+            <img class="instructionsImage" src="instructionimages/loop.png"
+                 alt="sequence diagram loop fragment example"
+                 onclick="SEQ.main.appendToSource('\nloop i < 1000\nnote over A:info\nA->B:info\nend')"
+                 title="loop i < 1000
+note over A:info
+A->B:info
+end"/>
+            <img class="instructionsImage" src="instructionimages/par.png"
+                 alt="sequence diagram parallel fragment example"
+                 onclick="SEQ.main.appendToSource('\npar info\nA->C:info\nA->B:info\nend')"
+                 title="par info
+A->C:info
+A->B:info
+end"/>
+            <img class="instructionsImage" src="instructionimages/group.png"
+                 alt="sequence diagram group fragment example"
+                 onclick="SEQ.main.appendToSource('\ngroup own name\nA->B:info\nend\ngroup own name [some text]\nA->B:info\nend')"
+                 title="group own name
+A->B:info
+end
+group own name [some text]
+A->B:info
+end"/>
+            <img class="instructionsImage" src="instructionimages/expandable.png"
+                 alt="sequence diagram expandable fragment example"
+                 onclick="SEQ.main.appendToSource('\nA->B:info1\nexpandable- info 1234567890\nB->C:info2\nC->D:info3\nD->E:info4\nend\nE->F:info5\nexpandable+ info qwertyurtyuiortyuioasdfghjkwertyuio\nB->C:info2\nC->D:info3\nD->E:info4\nend')"
+                 title="A->B:info1
+expandable- info 1234567890
+B->C:info2
+C->D:info3
+D->E:info4
+end
+E->F:info5
+expandable+ info qwertyurtyuiortyuioasdfghjkwertyuio
+B->C:info2
+C->D:info3
+D->E:info4
+end"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Text Styling</b>
+            <ul>
+                <li>Text in all entries can be styled</li>
+                <li>Bold text: **some bold text**</li>
+                <li>Italic text: //some italic text//</li>
+                <li>Small text: --some small text--</li>
+                <li>Big text: ++some big text++</li>
+                <li>Big and bold: ++**some big and bold text**++</li>
+                <li>Italic and small: //--italic and small--//</li>
+                <li>Use \ to escape wanted */-+ chars, examples: c\+\+ http:\/\/www.example.org</li>
+                <li>Color: &lt;color #red&gt;red text&lt;/color&gt;</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/textstyle.png"
+                 alt="sequence diagram text styling example"
+                 onclick="SEQ.main.appendToSource('\nbox over A:**some bold text**\nbox over A://some italic text//\nbox over A:--some small text--\nbox over A:++some big text++\nbox over A:++**Big and bold\\nlines of text**++\\n//--italic and small--//')"
+                 title="box over A:**some bold text**
+box over A://some italic text//
+box over A:--some small text--
+box over A:++some big text++
+box over A:++**Big and bold\nlines of text**++\n//--italic and small--//"/>
+            <img class="instructionsImage" src="instructionimages/textStyleColor.png"
+                 alt="sequence diagram text styling color example"
+                 onclick="SEQ.main.appendToSource('\nparticipant &quot;Al<color #red>ice</color>//**Long** ++name++//&quot; as Alice\nbox over Alice:Com<color #00ff00>binations:\\n++**Big and bold green\\nlines of text**++\\n//--ital</color>ic and small--//\\n++Writing C\+\+ in big text using \ to escape +++')"
+                 title="participant &quot;Al<color #red>ice</color>//**Long** ++name++//&quot; as Alice
+box over Alice:Com<color #00ff00>binations:\n++**Big and bold green\nlines of text**++\n//--ital</color>ic and small--//\n++Writing C\+\+ in big text using \ to escape +++"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Colors</b>
+            <ul>
+                <li>Color is supported for most of the entries and use the HTML color names or hex</li>
+                <li>W3C provides a good list of color names: <a target="_blank" href="http://www.w3schools.com/colors/colors_names.asp">W3C color names</a></li>
+                <li>Examples: #ff00ff, #lightblue</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/colorparticpant.png"
+                 alt="sequence diagram color participants example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A#red\ndatabase B#green')"
+                 title="participant A#red
+database B#green"/>
+            <img class="instructionsImage" src="instructionimages/colordivider.png"
+                 alt="sequence diagram color divider example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nparticipant B\nparticipant C\nparticipant D\n==info==#lightgreen')"
+                 title="participant A
+participant B
+participant C
+participant D
+==info==#lightgreen"/>
+            <img class="instructionsImage" src="instructionimages/colorboxnote.png"
+                 alt="sequence diagram color boxes and notes example"
+                 onclick="SEQ.main.appendToSource('\nnote over A#yellow:info\nrbox over A#violet:info\nabox right of A#steelblue:info')"
+                 title="note over A#yellow:info
+rbox over A#violet:info
+abox right of A#steelblue:info"/>
+            <img class="instructionsImage" src="instructionimages/colormessage.png"
+                 alt="sequence diagram color messages example"
+                 onclick="SEQ.main.appendToSource('\nA-#red>B:info\nA<#green--B:info\nA--#blue>>B:info')"
+                 title="A-#red>B:info
+A<#green--B:info
+A--#blue>>B:info"/>
+            <img class="instructionsImage" src="instructionimages/coloractivation.png"
+                 alt="sequence diagram color activations example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nparticipant B\nactivate A #00ee77\nA->B:info\nactivate B #red\nB->B:info\nactivate B #lightgray\ndeactivateafter B\n')"
+                 title="participant A
+participant B
+activate A #00ee77
+A->B:info
+activate B #red
+B->B:info
+activate B #lightgray
+deactivateafter B
+"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Active Color</b>
+            <ul>
+                <li>Active color specifies the color of all activations of a participant, the specified value will be overridden by any color specified on specific activations</li>
+                <ul>
+                    <li>activecolor #red: make all activations red</li>
+                    <li>activecolor participantName #blue: make all activations of the participant blue</li>
+                </ul>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/activeColor.png"
+                 alt="sequence diagram active color example"
+                 onclick="SEQ.main.appendToSource('\nparticipant B\nparticipant C\nparticipant D\n\nactivecolor #red\nactivecolor C #blue\nactivate B\nB->C:info\nactivate C\nC->>D:info\nactivate D\nB<--C:info\ndeactivate C\ndeactivate B\nB<-D:callback\nactivate C\ndeactivate D\nactivate B\nB->D:info\ndeactivate B\nB<-D:info\nactivate B #green')"
+                 title="participant B
+participant C
+participant D
+
+activecolor #red
+activecolor C #blue
+
+activate B
+B->C:info
+activate C
+C->>D:info
+activate D
+B<--C:info
+deactivate C
+deactivate B
+B<-D:callback
+activate C
+deactivate D
+activate B
+
+B->D:info
+deactivate B
+B<-D:info
+activate B #green"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Fonts</b>
+            <ul>
+                <li>The font can be specified using the fontfamily keyword and the css name of the font</li>
+                <li>Specific font: fontfamily My Font Name</li>
+                <li>Browser selected sans-serif font: fontfamily sans-serif</li>
+                <li>Browser selected mono spaced font: fontfamily mono</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/fontfamily.png"
+                 alt="sequence diagram font example"
+                 onclick="SEQ.main.appendToSource('\nfontfamily mono\nparticipant A\nnote over A:This is mono spaces')"
+                 title="fontfamily mono
+participant A
+note over A:This is mono spaces"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Automatic Numbering</b>
+            <ul>
+                <li>The autonumber statement gives automatic number of subsequent messages</li>
+                <li>The autonumber off statement stops the numbering</li>
+                <li>Automatic numbering can be started at a specified number, example: autonumber 10</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/autonumber.png"
+                 alt="sequence diagram automatic number example"
+                 onclick="SEQ.main.appendToSource('\nautonumber 1\nA->B:info\nB->B:info\nautonumber 10\nC->D:info\nA<-B:info\nA->B:info\nautonumber off\nB->C:info\nC->D:info')"
+                 title="autonumber 1
+A->B:info
+B->B:info
+autonumber 10
+C->D:info
+A<-B:info
+A->B:info
+autonumber off
+B->C:info
+C->D:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Linear Messages</b>
+            <ul>
+                <li>The linear statement makes subsequent messages of the same type linear</li>
+                <li>The linear off statement stops linear</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/linear.png"
+                 alt="sequence diagram linear messages example"
+                 onclick="SEQ.main.appendToSource('\nlinear\nA->B:info\nB->C:info\nC->D:info\nC<--D:info\nB<--C:info\nA<--B:info\nA->>B:info\nB->>C:info\nlinear off\nC->>D:info')"
+                 title="linear
+A->B:info
+B->C:info
+C->D:info
+C<--D:info
+B<--C:info
+A<--B:info
+A->>B:info
+B->>C:info
+linear off
+C->>D:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Parallel</b>
+            <ul>
+                <li>The parallel statement simply puts subsequent entries at the same y position</li>
+                <li>The parallel off statement stops parallel</li>
+                <li>It is different from linear since it doesn't do any intelligent matching for different types of entries</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/parallel.png"
+                 alt="sequence diagram parallel example"
+                 onclick="SEQ.main.appendToSource('\nparallel\nA<<-B:info\nB->C:info\nnote left of D:info\nparallel off\nC->>D:info')"
+                 title="parallel
+A<<-B:info
+B->C:info
+note left of D:info
+parallel off
+C->>D:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Participant Spacing</b>
+            <ul>
+                <li>Participant spacing allows control of spacing between the participants</li>
+                <li>The participantspacing equal statement makes the spacing between all participants equal</li>
+                <li>The participantspacing 50 statement makes the spacing between all participants at least 50</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/participantspacing.png"
+                 alt="sequence diagram participant spacing example"
+                 onclick="SEQ.main.appendToSource('\nparticipantspacing equal\nparticipant A\nparticipant B\nparticipant C\nA->B:info info info')"
+                 title="participantspacing equal
+participant A
+participant B
+participant C
+
+A->B:info info info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Entry Spacing</b>
+            <ul>
+                <li>Entry spacing allows control of spacing between the entries</li>
+                <li>Click anywhere on the diagram and press the + or - key to change spacing between all entries</li>
+                <li>Add entryspacing statements to change in different places of the diagram</li>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/entryspacing.png"
+                 alt="sequence diagram entry spacing example"
+                 onclick="SEQ.main.appendToSource('\nentryspacing 0.1\nA->B:info\nA->B:info\nentryspacing 3\nA->B:info\nentryspacing 1\nA->B:info\nA->B:info')"
+                 title="entryspacing 0.1
+A->B:info
+A->B:info
+entryspacing 3
+A->B:info
+entryspacing 1
+A->B:info
+A->B:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Life Line Color</b>
+            <ul>
+                <li>Specifies the color of the life lines</li>
+                <ul>
+                    <li>lifelinecolor #blue: make all life lines blue</li>
+                    <li>lifelinecolor participantName #red: make participant life line red</li>
+                </ul>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/lifeLineColor.png"
+                 alt="sequence diagram active color example"
+                 onclick="SEQ.main.appendToSource('\nparticipant A\nparticipant B\nparticipant C\n\nlifelinecolor #blue\nlifelinecolor B #red\nA->B:info\nB->C:info\nB<--C:info\nA<--B:info')"
+                 title="participant A
+participant B
+participant C
+
+lifelinecolor #blue
+lifelinecolor B #red
+
+A->B:info
+B->C:info
+B<--C:info
+A<--B:info"/>
+        </div>
+        <div class="instruction">
+            <b class=".centerText">Life Line Weight</b>
+            <ul>
+                <li>Specifies the weigth of the life lines</li>
+                <ul>
+                    <li>lifelineweight 4: sets the life line weight to 4</li>
+                </ul>
+            </ul>
+            <img class="instructionsImage" src="instructionimages/lifeLineWeight.png"
+                 alt="sequence diagram active color example"
+                 onclick="SEQ.main.appendToSource('\nlifelineweight 4\nA->B:info\nB->C:info\nB<--C:info\nA<--B:info')"
+                 title="lifelineweight 4
+
+A->B:info
+B->C:info
+B<--C:info
+A<--B:info"/>
+        </div>
+    </div>
+
+    <div class="popupDialogInstructions">
+        <p class="bottomInstruction"><b style="color: red">Click images</b> to append the examples to the diagram, <b style="color: red">hover over images</b> to see the example script</p>
+    </div>
+</div>
+
+<div class="popupDialog" id="imageSavePopup">
+    <img src="assets/closeicon.png" onclick="SEQ.main.closeDiagramImagePopup()" class="popupCloseIcon"/>
+
+    <div id="imageDiv">
+    </div>
+    <div class="popupDialogInstructions">
+        <p class="bottomInstruction"><b>Right click</b> and <b>copy image</b> or <b>Save as</b>...</p>
+    </div>
+</div>
+
+<div class="popupDialog" id="infoPopup">
+    <img src="assets/closeicon.png" onclick="SEQ.main.closeDiagramImagePopup()" class="popupCloseIcon"/>
+
+    <div class="popupDialogInner">
+        <p class="infoHeadline">ABOUT</p>
+
+        <p class="infoText">SequenceDiagram.org is a completely free online tool for creating sequence diagrams.
+        <p>All processing of parsing and painting the diagram is done using javascript client side in the user's web browser. This not only makes it snappy to
+            work with, but it also means that your secrets are safe. Since no backend server is used it is also possible to use the web application offline.</p>
+
+        <p>There are many sequence diagram tools out there but this is the only one which allows you to:</p>
+        <ul>
+            <li>Script using a simple text notation when it is most convenient to do so, and</li>
+            <li>Interact using your mouse to draw and change arrows or create notes when that is most convenient</li>
+        </ul>
+
+        <p>In other words bringing the best from both worlds. This makes it very easy to work with large diagram where other similar tools struggle. It also
+            doesn't have any ads or unnecessary distracting elements. (Even the top bar can be hidden to maximize the working area)</p>
+
+        <p>The tool is developed and maintained by people who create a lot of sequence diagrams in their daily work and from efficiency point of view weren't
+            100% satisfied with the existing tools. The graphic design is created by yusi.se.</p>
+
+        <p>If you have any question/comments/suggestions/bugs please contact <a href="mailto:info@sequencediagram.org">info@sequencediagram.org</a>
+            <br>
+
+        <p class="infoHeadline">FAQ</p>
+        <p class="infoFAQ">Are diagrams stored in any way or sent to any server by SequenceDiagram.org?</p>
+        <p class="infoText">No, all parsing and drawing of diagrams is executed solely on the client side in your browser. (In the past, the <i>share URL</i> button used a query parameter to transport the diagram data, which meant that the data in the URL was visible in the http access logs when someone used the generated URL. This is no longer the case since fragment '#' is used instead which is <i>dereferenced solely by the user agent</i>, see https://tools.ietf.org/html/rfc3986#section-3.5</p><br>
+
+        <p class="infoFAQ">Are diagrams/scripts created using SequenceDiagram.org covered by any license?</p>
+        <p class="infoText">No license is imposed by SequenceDiagram.org itself. However, like with all images containing text, the font you chose to use might,
+            depending on how you plan to use the image. The default font used in diagrams is the default sans-serif font selected by your browser. You can
+            specify a different font using the fontfamily keyword, see help for more information.</p><br>
+
+        <p class="infoFAQ">Can I run the SequenceDiagram.org tool in my companies private network?</p>
+        <p class="infoText">Yes, by donating 200$ you are licensed to run the Sequencediagram.org tool inside your company's network (site
+            license). You will also receive any new published versions of the software for the duration of 1 year from the donation date. The software is
+            delivered in two formats:</p>
+        <ul>
+            <li>A war file for deployment in a Java Servlet Container such as Tomcat, Jboss, Wildfly, Jetty, etc</li>
+            <li>A zip file for static web page hosting inside the DocumentRoot of a web server such as Apache, IIS, etc or any major cloud service provider such
+                as Amazon S3, Microsoft Azure App Service, Google App Engine, etc
+            </li>
+        </ul>
+
+
+        <p>Donations are used to support SequenceDiagram.org costs such as web hosting costs / domain costs / license costs for software used by developers
+            (IDEs etc)
+        </p><br>
+
+        <p class="infoFAQ">Is the code base of SequenceDiagram.org itself open source?</p>
+        <p class="infoText">No, the code base is not available under any open source license at this time.</p><br>
+
+        <p class="infoFAQ">What libraries are used by SequenceDiagram.org?</p>
+
+        <p class="infoText">
+        <ul>
+            <li><a href="https://github.com/pieroxy/lz-string">lz-string</a> is used to create URLs for sharing sequence diagrams.
+                <a href="libs/lz-string-LICENSE.txt">LICENSE</a></li>
+            <li><a href="https://github.com/gliffy/canvas2svg">Canvas2Svg</a> is used to export the diagram into SVG file format.
+                <a href="libs/canvas2svg-LICENSE.txt">LICENSE</a></li>
+            <li><a href="https://codemirror.net/">CodeMirror</a> is used as the text editor.
+                <a href="libs/codemirror-LICENSE.txt">LICENSE</a></li>
+            <li><a href="http://fontawesome.io">Font Awesome</a> is used to provide icons for the icon participants.
+                <a href="libs/fontawesome-webfont-LICENSE.txt">LICENSE</a></li>
+            <li><a href="https://materialdesignicons.com">Material Design Icons from the Community</a> is used to provide icons for the icon participants.
+                <a href="libs/materialdesignicons-webfont-LICENSE.txt">LICENSE</a></li>
+            <li><a href="https://github.com/google/material-design-icons">Material Design icons by Google</a> (included in materialdesignicons.com collection) is used to provide icons for the icon participants.
+                <a href="libs/materialdesigniconsbygoogle-LICENSE.txt">LICENSE</a></li>
+            <li><a href="https://github.com/mourner/rbush">RBush</a> is used for collision detection for onmousemove events.
+                <a href="libs/rbush-LICENSE.txt">LICENSE</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="popupDialog" id="shareUrlPopup">
+    <img src="assets/closeicon.png" onclick="SEQ.main.closeDiagramImagePopup()" class="popupCloseIcon"/>
+
+    <div class="popupDialogInner centerText">
+        <p>Titled link to select and copy: <a id="linkWithName" href="#" target="_blank">sequence diagram link</a></p>
+
+        <p>&nbsp;</p>
+
+        <p>&nbsp;</p>
+        <label for="shareRawUrl">Raw URL: </label><textarea id="shareRawUrl"></textarea>
+    </div>
+
+    <div class="popupDialogInstructions">
+        <p class="bottomInstruction">Copy the above <b>Titled link</b> or <b>Raw URL</b> and share it</p>
+    </div>
+</div>
+<div id="saveSourceMenu" class="openSaveMenu">
+    <div style="margin: 0; padding: 10px">
+        <form onsubmit="SEQ.saveAndOpen.saveSourceIntoFile()">
+            <div style="margin-bottom: 10px"><label for="fileName">diagram name </label><input id="fileName" type="text" required></div>
+            <input type="submit" style="display: none">
+        </form>
+        <div>
+            <label>save into </label>
+            <button onclick="SEQ.saveAndOpen.saveSourceIntoLocalStorage()">local storage</button>
+            <button onclick="SEQ.saveAndOpen.saveSourceIntoFile()">download folder</button>
+        </div>
+    </div>
+</div>
+<div id="openSourceMenu" class="openSaveMenu">
+    <div style="margin: 0; padding: 10px">
+        <label>open from disk</label><br>
+        <form id="openSource">
+            <input id="file-input" type="file" onchange="SEQ.saveAndOpen.openSourceFromFile(this)">
+        </form>
+        <br>
+        <label>open from local storage</label><br>
+        <div style="overflow-y: scroll; height: 12rem" id="localStorageSources"></div>
+    </div>
+</div>
+
+<script>
+    SEQ.main.init();
+</script>
+</body>
+</html>
